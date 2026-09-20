@@ -31,6 +31,23 @@ Field IDs are generated once (crypto-random, ≤ 2⁵³−1) and pinned in
 Module path `github.com/peacewalker122/mapper` is kept so generated Go
 descriptors remain compatible with the backend SDK.
 
+## Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/peacewalker122/mapper-compiler/main/install.sh | bash
+```
+
+This installs `mapper-gen` and `mapper-gen-go` from GitHub Releases
+(checksum-verified). Pin a version with `MAPPER_VERSION=v0.1.0`, change the
+target with `MAPPER_INSTALL_DIR`, or run `sh install.sh --help` for options.
+Alternatively, download the platform archive from the release manually (see
+Releases below) or build from source:
+
+```bash
+go build -o mapper-gen ./cmd/mapper-gen
+go build -o mapper-gen-go ./generator/go/cmd/mapper-gen-go
+```
+
 ## Releases
 
 Push a semver tag to publish versioned binaries through GitHub Releases:
