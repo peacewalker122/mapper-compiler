@@ -1,0 +1,47 @@
+version: 2
+
+project_name: mapper-compiler
+
+builds:
+  - id: mapper-gen
+    main: ./cmd/mapper-gen
+    binary: mapper-gen
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+  - id: mapper-gen-go
+    main: ./generator/go/cmd/mapper-gen-go
+    binary: mapper-gen-go
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+
+archives:
+  - id: binaries
+    ids:
+      - mapper-gen
+      - mapper-gen-go
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    name_template: "mapper-compiler_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    wrap_in_directory: true
+
+checksum:
+  name_template: "mapper-compiler_{{ .Version }}_checksums.txt"
+  algorithm: sha256

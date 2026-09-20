@@ -31,6 +31,22 @@ Field IDs are generated once (crypto-random, ≤ 2⁵³−1) and pinned in
 Module path `github.com/peacewalker122/mapper` is kept so generated Go
 descriptors remain compatible with the backend SDK.
 
+## Releases
+
+Push a semver tag to publish versioned binaries through GitHub Releases:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Each release includes `mapper-gen` and `mapper-gen-go` for Linux, macOS, and
+Windows on amd64 and arm64. Download the platform archive from the release,
+extract the binary, and verify it with the published SHA-256 checksums.
+
+Compiler releases are binary-only. The Go module path remains
+`github.com/peacewalker122/mapper`; releases do not publish a second Go module.
+
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE).
