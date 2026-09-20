@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mapper.dev/protocol/generator/v1/schema.json",
+  "title": "Mapper generator protocol v1",
+  "type": "object",
+  "required": ["protocol", "schema"],
+  "properties": {
+    "protocol": { "const": 1 },
+    "schema": {
+      "type": "object",
+      "required": ["version", "model"],
+      "properties": {
+        "version": { "type": "integer", "const": 1 },
+        "model": {
+          "type": "object",
+          "required": ["id", "name", "fields"],
+          "properties": {
+            "id": { "type": "integer", "minimum": 1 },
+            "name": { "type": "string" },
+            "fields": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["id", "name", "type", "required"],
+                "properties": {
+                  "id": { "type": "integer", "minimum": 1 },
+                  "name": { "type": "string" },
+                  "type": { "enum": ["string", "integer", "decimal", "boolean", "datetime"] },
+                  "required": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "options": { "type": "object" }
+  }
+}

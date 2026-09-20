@@ -15,8 +15,8 @@ const (
 )
 
 type LockFile struct {
-	Version uint32       `yaml:"version"`
-	Schema  LockSchema   `yaml:"schema"`
+	Version uint32               `yaml:"version"`
+	Schema  LockSchema           `yaml:"schema"`
 	Fields  map[string]LockField `yaml:"fields"`
 }
 
@@ -48,22 +48,15 @@ func (l *LockFile) Marshal() ([]byte, error) {
 	if l == nil {
 		return nil, fmt.Errorf("nil lock file")
 	}
-	// Deterministic key order is handled by yaml marshal of maps? Sort via wrapper.
-	// Use an ordered marshal by constructing a yaml.Node with sorted keys.
 	return marshalLockDeterministic(l)
 }
 
 func marshalLockDeterministic(l *LockFile) ([]byte, error) {
-	type fieldOut struct {
-		ID     uint64      `yaml:"id"`
-		Status FieldStatus `yaml:"status"`
-	}
 	type lockOut struct {
-		Version uint32              `yaml:"version"`
-		Schema  LockSchema          `yaml:"schema"`
-		Fields  yaml.Node           `yaml:"fields"`
+		Version uint32     `yaml:"version"`
+		Schema  LockSchema `yaml:"schema"`
+		Fields  yaml.Node  `yaml:"fields"`
 	}
-	// Build fields node with sorted keys for determinism.
 	fieldsNode := yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
 	names := make([]string, 0, len(l.Fields))
 	for n := range l.Fields {
@@ -82,7 +75,6 @@ func marshalLockDeterministic(l *LockFile) ([]byte, error) {
 		fieldsNode.Content = append(fieldsNode.Content, &key, &val)
 	}
 	out := lockOut{Version: l.Version, Schema: l.Schema, Fields: fieldsNode}
-	// Marshal via node to preserve order: encode manually.
 	root := yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
 	vk := yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "version"}
 	vv := yaml.Node{Kind: yaml.ScalarNode, Tag: "!!int", Value: fmt.Sprintf("%d", out.Version)}

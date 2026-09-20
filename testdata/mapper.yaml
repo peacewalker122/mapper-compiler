@@ -1,0 +1,19 @@
+version: 1
+
+model:
+  name: subscriber
+  fields:
+    - name: msisdn
+      type: string
+      required: true
+    - name: status
+      type: string
+      required: true
+    - name: last_tx
+      type: datetime
+
+generators:
+  - plugin: go
+    out: ./generated
+    options:
+      package: mapping

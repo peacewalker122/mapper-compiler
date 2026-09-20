@@ -111,7 +111,6 @@ func Generate(schema ir.Schema, pkg string) ([]byte, error) {
 	schemaVar := structName + "Schema"
 	needsTime := false
 
-	// Struct fields.
 	var structFields []*ast.Field
 	for _, f := range schema.Model.Fields {
 		typ, nt := goTypeExpr(f.Type, f.Required)
@@ -135,7 +134,6 @@ func Generate(schema ir.Schema, pkg string) ([]byte, error) {
 		},
 	}
 
-	// Schema descriptor: var XSchema = mapper.Schema{...}
 	var fieldElts []ast.Expr
 	for _, f := range schema.Model.Fields {
 		lit := &ast.CompositeLit{
@@ -153,17 +151,12 @@ func Generate(schema ir.Schema, pkg string) ([]byte, error) {
 		Elts: []ast.Expr{
 			kv("ID", intLit(schema.Model.ID)),
 			kv("Name", stringLit(schema.Model.Name)),
-			kv("Type", &ast.CompositeLit{
-				// placeholder replaced below: Fields key
-				Type: nil,
+			kv("Fields", &ast.CompositeLit{
+				Type: &ast.ArrayType{Elt: &ast.SelectorExpr{X: ast.NewIdent("mapper"), Sel: ast.NewIdent("Field")}},
+				Elts: fieldElts,
 			}),
 		},
 	}
-	// Build Fields key properly (cannot reuse kv trick above for slice type).
-	schemaLit.Elts[2] = kv("Fields", &ast.CompositeLit{
-		Type: &ast.ArrayType{Elt: &ast.SelectorExpr{X: ast.NewIdent("mapper"), Sel: ast.NewIdent("Field")}},
-		Elts: fieldElts,
-	})
 	varDecl := &ast.GenDecl{
 		Tok: token.VAR,
 		Specs: []ast.Spec{
@@ -174,17 +167,12 @@ func Generate(schema ir.Schema, pkg string) ([]byte, error) {
 		},
 	}
 
-	// Imports.
 	var imports []*ast.ImportSpec
 	if needsTime {
 		imports = append(imports, &ast.ImportSpec{Path: stringLit("time")})
 	}
 	imports = append(imports, &ast.ImportSpec{Path: stringLit("github.com/peacewalker122/mapper/mapper")})
-	importDecl := &ast.GenDecl{
-		Tok:    token.IMPORT,
-		Lparen: 1,
-		Specs:  []ast.Spec{},
-	}
+	importDecl := &ast.GenDecl{Tok: token.IMPORT, Lparen: 1}
 	for _, im := range imports {
 		importDecl.Specs = append(importDecl.Specs, im)
 	}

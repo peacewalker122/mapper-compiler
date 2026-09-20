@@ -28,7 +28,6 @@ func ResolveIDs(parsed ParsedSchema, lock *LockFile, gen idgen.IDGenerator) (ir.
 	if gen == nil {
 		return ir.Schema{}, nil, fmt.Errorf("nil ID generator")
 	}
-	// Normalize parsed -> IR without IDs first (validate types).
 	fields := make([]ir.Field, 0, len(parsed.Model.Fields))
 	for _, pf := range parsed.Model.Fields {
 		ft, err := toIRFieldType(pf.Type)
@@ -38,25 +37,19 @@ func ResolveIDs(parsed ParsedSchema, lock *LockFile, gen idgen.IDGenerator) (ir.
 		fields = append(fields, ir.Field{Name: pf.Name, Type: ft, Required: pf.Required})
 	}
 
-	// Prepare lock.
 	var out *LockFile
 	if lock == nil {
 		out = &LockFile{Version: 1, Fields: map[string]LockField{}}
 	} else {
-		// Deep copy to avoid mutating caller.
 		out = &LockFile{Version: lock.Version, Schema: lock.Schema, Fields: map[string]LockField{}}
 		for k, v := range lock.Fields {
 			out.Fields[k] = v
-		}
-		if out.Fields == nil {
-			out.Fields = map[string]LockField{}
 		}
 	}
 	if out.Version == 0 {
 		out.Version = 1
 	}
 
-	// Validate existing lock IDs.
 	seenIDs := map[uint64]string{}
 	if out.Schema.ID != 0 {
 		if err := idgen.ValidateID(out.Schema.ID); err != nil {
@@ -77,16 +70,9 @@ func ResolveIDs(parsed ParsedSchema, lock *LockFile, gen idgen.IDGenerator) (ir.
 		seenIDs[lf.ID] = name
 	}
 
-	// Resolve schema ID: reuse if lock exists and name matches, else generate.
 	schemaID := out.Schema.ID
-	schemaName := out.Schema.Name
-	if schemaID == 0 || schemaName != parsed.Model.Name {
-		// If name changed, treat as new schema? MVP: keep existing ID only if name matches,
-		// otherwise generate new ID (old lock fields remain but schema identity changes).
-		// To preserve stability for same name, reuse; for rename, new ID.
-		if schemaName == parsed.Model.Name && schemaID != 0 {
-			// reuse
-		} else {
+	if schemaID == 0 || out.Schema.Name != parsed.Model.Name {
+		if out.Schema.Name != parsed.Model.Name || schemaID == 0 {
 			newID, err := nextUnique(gen, seenIDs)
 			if err != nil {
 				return ir.Schema{}, nil, err
@@ -97,7 +83,6 @@ func ResolveIDs(parsed ParsedSchema, lock *LockFile, gen idgen.IDGenerator) (ir.
 	}
 	out.Schema = LockSchema{ID: schemaID, Name: parsed.Model.Name}
 
-	// Mark removed: any active lock field not in parsed becomes removed.
 	parsedSet := map[string]ParsedField{}
 	for _, pf := range parsed.Model.Fields {
 		parsedSet[pf.Name] = pf
@@ -109,11 +94,9 @@ func ResolveIDs(parsed ParsedSchema, lock *LockFile, gen idgen.IDGenerator) (ir.
 		}
 	}
 
-	// Resolve field IDs in parsed order.
 	resolved := make([]ir.Field, 0, len(fields))
 	for _, f := range fields {
 		if lf, ok := out.Fields[f.Name]; ok {
-			// Reuse original ID, reactivate if removed.
 			f.ID = lf.ID
 			if lf.Status == FieldRemoved {
 				lf.Status = FieldActive
@@ -136,7 +119,7 @@ func ResolveIDs(parsed ParsedSchema, lock *LockFile, gen idgen.IDGenerator) (ir.
 }
 
 func nextUnique(gen idgen.IDGenerator, seen map[uint64]string) (uint64, error) {
-	for i := 0; i < 1000; i++ {
+	for range 1000 {
 		id, err := gen.Next()
 		if err != nil {
 			return 0, err

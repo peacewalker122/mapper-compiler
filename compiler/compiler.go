@@ -3,7 +3,6 @@ package compiler
 import (
 	"fmt"
 
-	"github.com/peacewalker122/mapper/codegen/golang"
 	"github.com/peacewalker122/mapper/idgen"
 	"github.com/peacewalker122/mapper/ir"
 )
@@ -15,13 +14,11 @@ type Compiler struct {
 type CompileRequest struct {
 	Source   []byte
 	LockFile []byte
-	Package  string
 }
 
 type CompileResult struct {
-	Schema      ir.Schema
-	LockFile    []byte
-	GeneratedGo []byte
+	Schema   ir.Schema
+	LockFile []byte
 }
 
 func (c *Compiler) generator() idgen.IDGenerator {
@@ -32,10 +29,6 @@ func (c *Compiler) generator() idgen.IDGenerator {
 }
 
 func (c *Compiler) Compile(req CompileRequest) (*CompileResult, error) {
-	pkg := req.Package
-	if pkg == "" {
-		pkg = "generated"
-	}
 	parsed, err := ParseAndValidate(req.Source)
 	if err != nil {
 		return nil, err
@@ -48,13 +41,9 @@ func (c *Compiler) Compile(req CompileRequest) (*CompileResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	gen, err := golang.Generate(schema, pkg)
-	if err != nil {
-		return nil, err
-	}
 	lockBytes, err := updatedLock.Marshal()
 	if err != nil {
 		return nil, fmt.Errorf("marshal lock file: %w", err)
 	}
-	return &CompileResult{Schema: schema, LockFile: lockBytes, GeneratedGo: gen}, nil
+	return &CompileResult{Schema: schema, LockFile: lockBytes}, nil
 }

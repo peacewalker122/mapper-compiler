@@ -55,6 +55,15 @@ func Validate(schema ParsedSchema) error {
 		}
 	}
 
+	for index, generator := range schema.Generators {
+		if strings.TrimSpace(generator.Plugin) == "" {
+			validationErrors = append(validationErrors, fmt.Errorf("generator %d: plugin is required", index))
+		}
+		if strings.TrimSpace(generator.Out) == "" {
+			validationErrors = append(validationErrors, fmt.Errorf("generator %q: out is required", generator.Plugin))
+		}
+	}
+
 	return errors.Join(validationErrors...)
 }
 

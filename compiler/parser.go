@@ -8,8 +8,9 @@ import (
 )
 
 type ParsedSchema struct {
-	Version uint32      `yaml:"version"`
-	Model   ParsedModel `yaml:"model"`
+	Version    uint32            `yaml:"version"`
+	Model      ParsedModel       `yaml:"model"`
+	Generators []GeneratorConfig `yaml:"generators"`
 }
 
 type ParsedModel struct {
@@ -21,6 +22,12 @@ type ParsedField struct {
 	Name     string `yaml:"name"`
 	Type     string `yaml:"type"`
 	Required bool   `yaml:"required"`
+}
+
+type GeneratorConfig struct {
+	Plugin  string         `yaml:"plugin"`
+	Out     string         `yaml:"out"`
+	Options map[string]any `yaml:"options"`
 }
 
 func Parse(data []byte) (ParsedSchema, error) {
