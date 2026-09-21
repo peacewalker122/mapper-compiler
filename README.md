@@ -1,11 +1,12 @@
 # mapper-compiler
 
 Build-time schema compiler for Mapper. It reads one YAML model, resolves
-stable field IDs, and sends the resolved IR to the Go generator plugin.
+stable field IDs, and sends the resolved IR to generator plugins.
 
 ```bash
 go build -o mapper-gen ./cmd/mapper-gen
 go build -o mapper-gen-go ./generator/go/cmd/mapper-gen-go
+go build -o mapper-gen-ts ./generator/ts/cmd/mapper-gen-ts
 
 ./mapper-gen validate mapper.yaml
 ./mapper-gen generate --input mapper.yaml --lock mapper.lock.yaml
@@ -19,14 +20,37 @@ generators:
     out: ./internal/mapper
     options:
       package: mapping
+  - plugin: ts
+    out: ./src/generated
+    options:
+      importFrom: "@mapper/client"
+      withSchema: true
 ```
 
-The Go generator receives versioned JSON on stdin and returns generated files
+Each generator receives versioned JSON on stdin and returns generated files
 on stdout. The host validates paths, detects collisions, and writes artifacts
 atomically.
 
-Go is currently supported. Contributors are needed for additional language
-generators.
+Go and TypeScript are supported. The TypeScript plugin emits a typed
+interface (camelCase props, `datetime` as ISO `string`, optional fields as
+`?: T | null`) plus a `Schema` const compatible with `@mapper/client`.
+
+Type mapping:
+
+| IR        | required | optional              |
+|-----------|----------|-----------------------|
+| string    | `string` | `string \| null` + `?`|
+| integer   | `number` | `number \| null` + `?`|
+| decimal   | `number` | `number \| null` + `?`|
+| boolean   | `boolean`| `boolean \| null` + `?`|
+| datetime  | `string` | `string \| null` + `?`|
+
+TS plugin options:
+
+| option      | type    | default            | meaning                              |
+|-------------|---------|--------------------|--------------------------------------|
+| `importFrom`| string  | `"@mapper/client"` | module for `Schema` type; `""` = standalone |
+| `withSchema`| boolean | `true`             | emit the `XSchema` const             |
 
 Field IDs are generated once (crypto-random, ≤ 2⁵³−1) and pinned in
 `*.lock.yaml`. Removed fields stay `removed` and are never recycled.
@@ -40,7 +64,7 @@ descriptors remain compatible with the backend SDK.
 curl -fsSL https://raw.githubusercontent.com/peacewalker122/mapper-compiler/main/install.sh | bash
 ```
 
-This installs `mapper-gen` and `mapper-gen-go` from GitHub Releases
+This installs `mapper-gen`, `mapper-gen-go`, and `mapper-gen-ts` from GitHub Releases
 (checksum-verified). Pin a version with `MAPPER_VERSION=v0.1.0`, change the
 target with `MAPPER_INSTALL_DIR`, or run `sh install.sh --help` for options.
 Alternatively, download the platform archive from the release manually (see
@@ -49,6 +73,7 @@ Releases below) or build from source:
 ```bash
 go build -o mapper-gen ./cmd/mapper-gen
 go build -o mapper-gen-go ./generator/go/cmd/mapper-gen-go
+go build -o mapper-gen-ts ./generator/ts/cmd/mapper-gen-ts
 ```
 
 ## Releases
@@ -60,7 +85,7 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
-Each release includes `mapper-gen` and `mapper-gen-go` for Linux, macOS, and
+Each release includes `mapper-gen`, `mapper-gen-go`, and `mapper-gen-ts` for Linux, macOS, and
 Windows on amd64 and arm64. Download the platform archive from the release,
 extract the binary, and verify it with the published SHA-256 checksums.
 
