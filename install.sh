@@ -1,5 +1,5 @@
 #!/bin/sh
-# Install mapper-gen and mapper-gen-go from mapper-compiler GitHub Releases.
+# Install mapper-gen, mapper-gen-go, and mapper-gen-ts from mapper-compiler GitHub Releases.
 #
 # One-line install (Linux, macOS, Windows via Git Bash):
 #   curl -fsSL https://raw.githubusercontent.com/peacewalker122/mapper-compiler/main/install.sh | bash
@@ -21,7 +21,7 @@ usage() {
   cat <<USAGE
 Usage: install.sh [--version vX.Y.Z] [--dir DIR]
 
-Installs mapper-gen and mapper-gen-go from mapper-compiler GitHub Releases.
+Installs mapper-gen, mapper-gen-go, and mapper-gen-ts from mapper-compiler GitHub Releases.
 
 Options:
   --version vX.Y.Z   Release tag to install (default: latest release,
@@ -135,8 +135,9 @@ else
 fi
 MAPPER_GEN="$(find "${TMPDIR}/extracted" -name mapper-gen -type f | head -n 1)"
 MAPPER_GEN_GO="$(find "${TMPDIR}/extracted" -name mapper-gen-go -type f | head -n 1)"
-if [ -z "$MAPPER_GEN" ] || [ -z "$MAPPER_GEN_GO" ]; then
-  echo "error: archive did not contain mapper-gen and mapper-gen-go" >&2
+MAPPER_GEN_TS="$(find "${TMPDIR}/extracted" -name mapper-gen-ts -type f | head -n 1)"
+if [ -z "$MAPPER_GEN" ] || [ -z "$MAPPER_GEN_GO" ] || [ -z "$MAPPER_GEN_TS" ]; then
+  echo "error: archive did not contain mapper-gen, mapper-gen-go, and mapper-gen-ts" >&2
   exit 1
 fi
 
@@ -144,11 +145,12 @@ fi
 mkdir -p "$INSTALL_DIR"
 cp "$MAPPER_GEN" "$INSTALL_DIR/mapper-gen"
 cp "$MAPPER_GEN_GO" "$INSTALL_DIR/mapper-gen-go"
-chmod +x "$INSTALL_DIR/mapper-gen" "$INSTALL_DIR/mapper-gen-go"
+cp "$MAPPER_GEN_TS" "$INSTALL_DIR/mapper-gen-ts"
+chmod +x "$INSTALL_DIR/mapper-gen" "$INSTALL_DIR/mapper-gen-go" "$INSTALL_DIR/mapper-gen-ts"
 
 # --- Smoke test (mapper-gen with no args prints usage and exits 1) ---
 if "$INSTALL_DIR/mapper-gen" 2>&1 | grep -q "usage: mapper-gen"; then
-  echo "Installed mapper-gen and mapper-gen-go to ${INSTALL_DIR}"
+  echo "Installed mapper-gen, mapper-gen-go, and mapper-gen-ts to ${INSTALL_DIR}"
 else
   echo "error: installed mapper-gen failed to run" >&2
   exit 1

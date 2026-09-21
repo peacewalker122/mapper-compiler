@@ -27,12 +27,25 @@ builds:
       - arm64
     env:
       - CGO_ENABLED=0
+  - id: mapper-gen-ts
+    main: ./generator/ts/cmd/mapper-gen-ts
+    binary: mapper-gen-ts
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
 
 archives:
   - id: binaries
     ids:
       - mapper-gen
       - mapper-gen-go
+      - mapper-gen-ts
     formats:
       - tar.gz
     format_overrides:
