@@ -1,7 +1,7 @@
 # mapper-compiler
 
 Build-time schema compiler for Mapper. It reads one YAML model, resolves
-stable field IDs, and sends the resolved IR to configured generator plugins.
+stable field IDs, and sends the resolved IR to the Go generator plugin.
 
 ```bash
 go build -o mapper-gen ./cmd/mapper-gen
@@ -21,9 +21,12 @@ generators:
       package: mapping
 ```
 
-Plugins receive versioned JSON on stdin and return generated files on stdout.
-The host validates paths, detects collisions, and writes artifacts atomically.
-Plugin names resolve through the registry and `mapper-gen-<name>` convention.
+The Go generator receives versioned JSON on stdin and returns generated files
+on stdout. The host validates paths, detects collisions, and writes artifacts
+atomically.
+
+Go is currently supported. Contributors are needed for additional language
+generators.
 
 Field IDs are generated once (crypto-random, ≤ 2⁵³−1) and pinned in
 `*.lock.yaml`. Removed fields stay `removed` and are never recycled.
